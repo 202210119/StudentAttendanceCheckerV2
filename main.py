@@ -1,6 +1,8 @@
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import pandas as pd
+from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode
 
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -67,7 +69,19 @@ def display_class(class_name):
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
         schedule_data = schedule_sheet.get_all_values()
-        st.table(schedule_data)
+        df = pd.DataFrame(schedule_data[1:], columns=schedule_data[0])
+        
+        # Editable table
+        gb = GridOptionsBuilder.from_dataframe(df)
+        gb.configure_default_column(editable=True)
+        grid_options = gb.build()
+        grid_response = AgGrid(df, gridOptions=grid_options, columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS)
+        updated_df = grid_response['data']
+        
+        if st.button("Save Schedule"):
+            schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
+            st.success("Schedule updated successfully!")
+        
     except gspread.exceptions.WorksheetNotFound:
         st.write("Schedule sheet not found.")
     
