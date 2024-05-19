@@ -3,6 +3,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 from datetime import datetime
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -66,9 +67,12 @@ def log_attendance(username, class_name):
         current_time = datetime.now().strftime("%I:%M %p")
         schedule_data = schedule_sheet.get_all_records()
 
+        # Debugging: Print schedule data to check the structure
+        st.write(schedule_data)
+
         for entry in schedule_data:
-            if entry['Time'] == current_time:
-                subject = entry['Subject']
+            if entry.get('Time') == current_time:
+                subject = entry.get('Subject', 'N/A')
                 date_str = datetime.now().strftime("%m/%d/%Y, %A")
                 attendance_sheet = schedule_sheet.col_values(1)
                 if date_str not in attendance_sheet:
@@ -160,9 +164,10 @@ elif page == "Home" and st.session_state.logged_in:
                 st.success("Schedule updated successfully!")
 
         st.subheader("Log Attendance")
-        if st.button("Log Attendance"):
-            message = log_attendance(st.session_state.username, selected_class)
-            st.success(message) if "logged" in message else st.error(message)
+        if st.session_state.account_type.lower() == "student":
+            if st.button("Log Attendance"):
+                message = log_attendance(st.session_state.username, selected_class)
+                st.success(message) if "logged" in message else st.error(message)
 
 elif page == "Logout" and st.session_state.logged_in:
     st.title("Logout Page")
