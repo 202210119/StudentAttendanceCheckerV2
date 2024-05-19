@@ -52,6 +52,34 @@ def join_class(username, class_name):
     except gspread.exceptions.WorksheetNotFound:
         return f"Class '{class_name}' does not exist."
 
+# Function to get a list of all class names
+def get_class_names():
+    worksheets = spreadsheet.worksheets()
+    class_names = [ws.title.split(':')[0] for ws in worksheets if ':' in ws.title and "USERS" not in ws.title]
+    return list(set(class_names))
+
+# Function to display class schedule and students
+def display_class(class_name):
+    st.subheader(f"Class: {class_name}")
+    
+    # Display schedule
+    st.write("Schedule")
+    try:
+        schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
+        schedule_data = schedule_sheet.get_all_values()
+        st.table(schedule_data)
+    except gspread.exceptions.WorksheetNotFound:
+        st.write("Schedule sheet not found.")
+    
+    # Display students
+    st.write("Students")
+    try:
+        students_sheet = spreadsheet.worksheet(f"{class_name}:STUDENTS")
+        students_data = students_sheet.get_all_values()
+        st.table(students_data)
+    except gspread.exceptions.WorksheetNotFound:
+        st.write("Students sheet not found.")
+
 # Initialize session state for login
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -108,6 +136,12 @@ elif page == "Home" and st.session_state.logged_in:
                 st.success(f"Class '{class_name}' created successfully!")
             else:
                 st.error("Failed to create the class.")
+        
+        # Display dropdown menu to select a class
+        class_names = get_class_names()
+        selected_class = st.selectbox("Select a Class to Manage:", class_names)
+        if selected_class:
+            display_class(selected_class)
     
     elif st.session_state.account_type.lower() == "student":
         st.subheader("Join a Class")
