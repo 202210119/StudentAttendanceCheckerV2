@@ -73,8 +73,8 @@ def display_class(class_name):
         
         # Editable table
         gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_column(“col1”, editable=True)
-        gb.configure_column(“col2”, editable=True)
+        gb.configure_column("col1", editable=True)
+        gb.configure_column("col2", editable=True)
         grid_options = gb.build()
 
         grid_return = AgGrid(df,
