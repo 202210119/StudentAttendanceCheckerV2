@@ -1,6 +1,7 @@
-import streamlit as st
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+# Define column names
+USERNAME_COLUMN = 'Username'
+PASSWORD_COLUMN = 'Password'
+ACCOUNT_TYPE_COLUMN = 'AccountType'
 
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -11,15 +12,13 @@ sheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k").sheet
 def register_user(username, password, account_type):
     users = sheet.get_all_records()
     for user in users:
-        if user.get('Username') == username:
+        if user.get(USERNAME_COLUMN) == username:
             return "Username already exists!"
     sheet.append_row([username, password, account_type])
     return "Registration successful!"
 
 def login_user(username, password, users):
     for user_data in users:
-        if len(user_data) < 3:  # Skip incomplete rows
-            continue
         stored_username, stored_password, account_type = [value.strip() if isinstance(value, str) else value for value in user_data[:3]]  # Extract and strip username, password, account type
         stored_username_lower = stored_username.lower()  # Convert stored username to lowercase
         if stored_username_lower == username.strip().lower() and str(stored_password) == password.strip():
@@ -59,10 +58,8 @@ elif page == "Login" and not st.session_state.logged_in:
     login_password = st.text_input("Password", type="password", key="login_password")
     if st.button("Login"):
         try:
-            users = sheet.get_all_values()  # Fetch all values from Google Sheets
-            st.write(f"Fetched users: {users}")
+            users = sheet.get_all_records()  # Fetch all records from Google Sheets
             account_type, username = login_user(login_username, login_password, users)
-            st.write(f"Checking user: {username}")
             if account_type:
                 st.session_state.logged_in = True
                 st.session_state.account_type = account_type
