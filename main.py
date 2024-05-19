@@ -71,21 +71,28 @@ def display_class(class_name):
         schedule_data = schedule_sheet.get_all_values()
         df = pd.DataFrame(schedule_data[:10], columns=schedule_data[0])
         
-        # Editable table
-        gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_column("col1", editable=True)
-        gb.configure_column("col2", editable=True)
-        grid_options = gb.build()
+        # Display schedule
+        st.write("Schedule")
+        try:
+            schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
+            schedule_data = schedule_sheet.get_all_values()
+            df = pd.DataFrame(schedule_data[:10], columns=schedule_data[0])
 
-        grid_return = AgGrid(df,
-        gridOptions=gridOptions)
-        
-        if st.button("Save Schedule"):
-            schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
-            st.success("Schedule updated successfully!")
-        
-    except gspread.exceptions.WorksheetNotFound:
-        st.write("Schedule sheet not found.")
+            # Editable table
+            gb = GridOptionsBuilder.from_dataframe(df)
+            gb.configure_default_column(editable=True)
+            grid_options = gb.build()
+
+            grid_return = AgGrid(df, gridOptions=grid_options)
+
+            if st.button("Save Schedule"):
+                # Get the updated dataframe from the AgGrid component
+                updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
+                schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
+                st.success("Schedule updated successfully!")
+
+        except gspread.exceptions.WorksheetNotFound:
+            st.write("Schedule sheet not found.")
     
     # Display students
     st.write("Students")
