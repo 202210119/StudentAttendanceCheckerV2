@@ -21,14 +21,23 @@ def login_user(username, password):
     for user in users:
         if 'Username' in user and 'Password' in user:  # Check if keys are present
             if user['Username'] == username and user['Password'] == password:
-                return user.get('AccountType')  # Use .get() to safely retrieve value
-    return None
+                return user.get('AccountType'), user.get('Username')  # Use .get() to safely retrieve value
+    return None, None
+
+# Initialize session state for login
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+    st.session_state.account_type = ""
+    st.session_state.username = ""
 
 # Streamlit application
 st.sidebar.title("Navigation")
-page = st.sidebar.selectbox("Choose a page", ["Login", "Register"])
+if st.session_state.logged_in:
+    page = st.sidebar.selectbox("Choose a page", ["Home", "Logout"])
+else:
+    page = st.sidebar.selectbox("Choose a page", ["Login", "Register"])
 
-if page == "Register":
+if page == "Register" and not st.session_state.logged_in:
     st.title("Registration Page")
     st.header("Register")
     register_username = st.text_input("Username", key="register_username")
@@ -41,17 +50,33 @@ if page == "Register":
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
-elif page == "Login":
+elif page == "Login" and not st.session_state.logged_in:
     st.title("Login Page")
     st.header("Login")
     login_username = st.text_input("Username", key="login_username")
     login_password = st.text_input("Password", type="password", key="login_password")
     if st.button("Login"):
         try:
-            account_type = login_user(login_username, login_password)
+            account_type, username = login_user(login_username, login_password)
             if account_type:
+                st.session_state.logged_in = True
+                st.session_state.account_type = account_type
+                st.session_state.username = username
                 st.success(f"Logged in as {account_type}")
             else:
                 st.error("Invalid username or password")
         except Exception as e:
             st.error(f"An error occurred: {e}")
+
+elif page == "Home" and st.session_state.logged_in:
+    st.title("Home Page")
+    st.header(f"Welcome, {st.session_state.account_type.lower()} {st.session_state.username}!")
+
+elif page == "Logout" and st.session_state.logged_in:
+    st.title("Logout Page")
+    if st.button("Logout"):
+        st.session_state.logged_in = False
+        st.session_state.account_type = ""
+        st.session_state.username = ""
+        st.success("You have successfully logged out.")
+        st.experimental_rerun()  # Reload the page to reflect changes
