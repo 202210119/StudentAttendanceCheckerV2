@@ -71,12 +71,13 @@ def display_class(class_name):
         schedule_data = schedule_sheet.get_all_values()
         df = pd.DataFrame(schedule_data[1:11], columns=schedule_data[0:2])  # Limit to first 2 columns and 10 rows
         
-        # Editable table
+        # Display editable table
         gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_columns(df.columns.tolist()[:2], editable=True)  # Limit to the first 2 columns
+        gb.configure_default_column(editable=True)
         grid_options = gb.build()
-        grid_response = AgGrid(df, gridOptions=grid_options)  # Remove columns_auto_size_mode argument
-        updated_df = grid_response['data']
+
+        # Display the AgGrid with the provided DataFrame and grid options
+        AgGrid(df, gridOptions=grid_options)
         
         if st.button("Save Schedule"):
             schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
