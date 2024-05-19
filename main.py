@@ -1,6 +1,7 @@
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from streamlit.errors import StreamlitAPIException  # Import StreamlitAPIException
 
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -32,8 +33,11 @@ register_username = st.text_input("Username", key="register_username")
 register_password = st.text_input("Password", type="password", key="register_password")
 account_type = st.radio("Account Type", ("Teacher", "Student"))
 if st.button("Register"):
-    message = register_user(register_username, register_password, account_type)
-    st.success(message) if message == "Registration successful!" else st.error(message)
+    try:
+        message = register_user(register_username, register_password, account_type)
+        st.success(message) if message == "Registration successful!" else st.error(message)
+    except StreamlitAPIException:  # Catch StreamlitAPIException
+        pass  # Do nothing if StreamlitAPIException occurs
 
 # User Login
 st.header("Login")
