@@ -46,6 +46,7 @@ def join_class(username, class_name):
     try:
         class_sheet = spreadsheet.worksheet(f"{class_name}:STUDENTS")
         class_students = class_sheet.get_all_values()
+        print("Class Students:", class_students)  # Debugging print statement
         for student in class_students:
             if student[0] == username:
                 return "You are already enrolled in this class!"
