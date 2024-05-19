@@ -177,6 +177,6 @@ pyrightconfig.json
 .streamlit/secrets.toml
 
 #credentials
-#credentials.json
+credentials.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
