@@ -18,7 +18,9 @@ def register_user(username, password, account_type):
 
 def login_user(username, password):
     users = sheet.get_all_records()
+    st.write(users)  # Debugging: Print all users
     for user in users:
+        st.write(user)  # Debugging: Print each user
         if 'Username' in user and 'Password' in user:  # Check if keys are present
             if user['Username'] == username and user['Password'] == password:
                 return user.get('AccountType'), user.get('Username')  # Use .get() to safely retrieve value
