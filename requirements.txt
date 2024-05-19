@@ -3,3 +3,4 @@ git+https://github.com/streamlit/gsheets-connection
 gspread
 oauth2client
 streamlit-aggrid
+pandas
