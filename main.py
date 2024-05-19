@@ -16,11 +16,12 @@ def register_user(username, password, account_type):
     sheet.append_row([username, password, account_type])
     return "Registration successful!"
 
-def login_user(username, password):
-    users = sheet.get_all_records()
-    for user in users:
-        if user.get('Username') == username and str(user.get('Password')) == password:
-            account_type = user.get('AccountType')
+def login_user(username, password, users):
+    for user_data in users:
+        if len(user_data) < 3:  # Skip incomplete rows
+            continue
+        stored_username, stored_password, account_type = user_data[:3]  # Extract username, password, account type
+        if stored_username == username and stored_password == password:
             return account_type, username
     return None, None
 
@@ -57,7 +58,9 @@ elif page == "Login" and not st.session_state.logged_in:
     login_password = st.text_input("Password", type="password", key="login_password")
     if st.button("Login"):
         try:
-            account_type, username = login_user(login_username, login_password)
+            users = sheet.get_all_values()  # Fetch all values from Google Sheets
+            st.write(f"Fetched users: {users}")
+            account_type, username = login_user(login_username, login_password, users)
             st.write(f"Checking user: {username}")
             if account_type:
                 st.session_state.logged_in = True
@@ -68,7 +71,6 @@ elif page == "Login" and not st.session_state.logged_in:
                 st.error("Invalid username or password")
         except Exception as e:
             st.error(f"An error occurred: {e}")
-
 
 elif page == "Home" and st.session_state.logged_in:
     st.title("Home Page")
