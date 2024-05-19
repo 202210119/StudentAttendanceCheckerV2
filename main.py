@@ -7,6 +7,7 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
 spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
+sheet = spreadsheet.sheet1
 
 # Function to create a new class with schedule and students sheets
 def create_class(class_name):
@@ -19,6 +20,24 @@ def create_class(class_name):
     except Exception as e:
         st.error(f"An error occurred while creating the class: {e}")
         return False
+
+# Function to register a new user
+def register_user(username, password, account_type):
+    users = sheet.get_all_records()
+    for user in users:
+        if user.get('Username') == username:
+            return "Username already exists!"
+    sheet.append_row([username, password, account_type])
+    return "Registration successful!"
+
+# Function to login a user
+def login_user(username, password):
+    users = sheet.get_all_records()
+    for user in users:
+        if user.get("Username") == username and str(user.get("Password")) == str(password):
+            account_type = user.get("Account Type")
+            return account_type, username
+    return None, None
 
 # Initialize session state for login
 if 'logged_in' not in st.session_state:
