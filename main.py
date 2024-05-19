@@ -9,6 +9,18 @@ client = gspread.authorize(creds)
 spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
 sheet = spreadsheet.sheet1
 
+# Function to create a new class with schedule and students sheets
+def create_class(class_name):
+    try:
+        # Create schedule sheet
+        schedule_sheet = spreadsheet.add_worksheet(title=f"{class_name}:SCHEDULE", rows=100, cols=20)
+        # Create students sheet
+        students_sheet = spreadsheet.add_worksheet(title=f"{class_name}:STUDENTS", rows=100, cols=20)
+        return True
+    except Exception as e:
+        st.error(f"An error occurred while creating the class: {e}")
+        return False
+
 # Function to register a new user
 def register_user(username, password, account_type):
     users = sheet.get_all_records()
