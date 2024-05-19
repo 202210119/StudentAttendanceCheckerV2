@@ -17,6 +17,15 @@ def create_class(class_name):
         st.error(f"An error occurred while creating the class: {e}")
         return False
 
+# Function to check login credentials
+def login_user(username, password):
+    users = spreadsheet.worksheet("USERS").get_all_records()
+    for user in users:
+        if user.get("Username") == username and str(user.get("Password")) == str(password):
+            account_type = user.get("Account Type")
+            return account_type, username
+    return None, None
+
 # Initialize session state for login
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
