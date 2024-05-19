@@ -1,3 +1,4 @@
+
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -84,17 +85,18 @@ def display_class(class_name):
 
         if st.button("Save Schedule"):
     # Get the updated dataframe from the AgGrid component
-    if 'data' in grid_return:
-        updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
-        # Remove empty rows
-        updated_df.dropna(how='all', inplace=True)
-        if not updated_df.empty:
-            schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
-            st.success("Schedule updated successfully!")
-        else:
-            st.warning("No data to update.")
-    else:
-        st.warning("No data returned from the editable table.")
+            if 'data' in grid_return:
+                updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
+                # Remove empty rows
+                updated_df.dropna(how='all', inplace=True)
+                if not updated_df.empty:
+                    schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
+                    st.success("Schedule updated successfully!")
+                else:
+                    st.warning("No data to update.")
+            else:
+                st.warning("No data returned from the editable table.")
+
     
     # Display students
     st.write("Students")
