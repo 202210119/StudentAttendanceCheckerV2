@@ -20,9 +20,8 @@ def login_user(username, password):
     users = sheet.get_all_records()
     st.write("Fetched users:", users)  # Debugging line
     for user in users:
-        st.write("Checking user:", user)  # Debugging line
-        if user.get('Username') == username and user.get('Password') == password:
-            account_type = user.get('AccountType')
+        if user.get("Username") == username and user.get("Password") == password:
+            account_type = user.get("AccountType")
             return account_type, username
     return None, None
 
