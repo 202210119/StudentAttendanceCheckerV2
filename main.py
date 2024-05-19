@@ -128,4 +128,35 @@ elif page == "Login" and not st.session_state.logged_in:
     login_password = st.text_input("Password", type="password", key="login_password")
     if st.button("Login"):
         try:
-            account_type, username
+            account_type, username = login_user(login_username, login_password)
+            if account_type:
+                st.session_state.logged_in = True
+                st.session_state.account_type = account_type
+                st.session_state.username = username
+                st.success(f"Logged in as {account_type}")
+            else:
+                st.error("Invalid username or password")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+
+elif page == "Home" and st.session_state.logged_in:
+    st.title("Home Page")
+    st.header(f"Welcome, {st.session_state.account_type.lower()} {st.session_state.username}!")
+
+    if st.session_state.account_type.lower() == "teacher":
+        st.subheader("Teacher Section")
+        # Teacher-specific content
+        st.subheader("Create a Class")
+        class_name = st.text_input("Enter Class Name:")
+        if st.button("Create Class"):
+            if create_class(class_name):
+                st.success(f"Class '{class_name}' created successfully!")
+            else:
+                st.error("Failed to create the class.")
+        
+        # Display dropdown menu to select a class
+        class_names = get_class_names()
+        selected_class = st.selectbox("Select a Class to Manage:", class_names)
+        if selected_class:
+            display_class(selected_class)
+    elif st.session_state.account
