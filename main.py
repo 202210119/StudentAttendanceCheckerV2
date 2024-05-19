@@ -28,6 +28,14 @@ def get_classes():
     classes = [worksheet for worksheet in all_worksheets if worksheet.lower().split(":")[-1] != "users"]
     return classes
 
+def login_user(username, password):
+    users = sheet.get_all_records()
+    for user in users:
+        if user.get("Username") == username and str(user.get("Password")) == str(password):
+            account_type = user.get("Account Type")
+            return account_type, username
+    return None, None
+
 # Initialize session state for login
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
