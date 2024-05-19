@@ -1,8 +1,7 @@
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 
-spreadsheet_id = "15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k"
-conn = st.connection("gsheets", type=GSheetsConnection, id=spreadsheet_id)
+conn = st.connection("gsheets", type=GSheetsConnection, id="15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
 
 def register_user(username, password, account_type):
     df = conn.read()
