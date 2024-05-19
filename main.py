@@ -21,8 +21,11 @@ def login_user(username, password, users):
         if len(user_data) < 3:  # Skip incomplete rows
             continue
         stored_username, stored_password, account_type = user_data[:3]  # Extract username, password, account type
+        print(f"Comparing: username={username}, password={password}, stored_username={stored_username}, stored_password={stored_password}")
         if stored_username == username and str(stored_password) == password:
+            print("Match found!")
             return account_type, username
+    print("No match found.")
     return None, None
 
 # Initialize session state for login
