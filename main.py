@@ -6,26 +6,27 @@ from oauth2client.service_account import ServiceAccountCredentials
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
-sheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k").sheet1
+spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
 
-def register_user(username, password, account_type):
-    users = sheet.get_all_records()
-    for user in users:
-        if user.get('Username') == username:
-            return "Username already exists!"
-    sheet.append_row([username, password, account_type])
-    return "Registration successful!"
+# Function to create a new class sheets
+def create_class(class_name):
+    try:
+        # Create schedule sheet
+        schedule_sheet = spreadsheet.add_worksheet(title=f"{class_name}:SCHEDULE", rows=100, cols=20)
+        # Create students sheet
+        students_sheet = spreadsheet.add_worksheet(title=f"{class_name}:STUDENTS", rows=100, cols=20)
+        return True
+    except Exception as e:
+        st.error(f"An error occurred while creating the class: {e}")
+        return False
 
-def login_user(username, password):
-    users = sheet.get_all_records()
-    for user in users:
-        if user.get("Username") == username and str(user.get("Password")) == str(password):
-            account_type = user.get("Account Type")
-            return account_type, username
-    return None, None
-
-
-
+# Function to get the list of classes
+def get_classes():
+    # Get all worksheet titles
+    all_worksheets = [worksheet.title for worksheet in spreadsheet.worksheets()]
+    # Filter out users as classes
+    classes = [worksheet for worksheet in all_worksheets if worksheet.lower().split(":")[-1] != "users"]
+    return classes
 
 # Initialize session state for login
 if 'logged_in' not in st.session_state:
@@ -74,6 +75,19 @@ elif page == "Login" and not st.session_state.logged_in:
 elif page == "Home" and st.session_state.logged_in:
     st.title("Home Page")
     st.header(f"Welcome, {st.session_state.account_type.lower()} {st.session_state.username}!")
+
+    if st.session_state.account_type.lower() == "teacher":
+        st.subheader("Create a Class")
+        class_name = st.text_input("Enter Class Name:")
+        if st.button("Create Class"):
+            if create_class(class_name):
+                st.success(f"Class '{class_name}' created successfully!")
+            else:
+                st.error("Failed to create the class.")
+    
+    # Display dropdown menu to select a class
+    classes = get_classes()
+    selected_class = st.selectbox("Select a Class:", classes)
 
 elif page == "Logout" and st.session_state.logged_in:
     st.title("Logout Page")
