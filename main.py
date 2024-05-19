@@ -4,26 +4,21 @@ from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 
-# Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
 spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
 sheet = spreadsheet.sheet1
 
-# Function to create a new class with schedule and students sheets
 def create_class(class_name):
     try:
-        # Create schedule sheet
         schedule_sheet = spreadsheet.add_worksheet(title=f"{class_name}:SCHEDULE", rows=100, cols=20)
-        # Create students sheet
         students_sheet = spreadsheet.add_worksheet(title=f"{class_name}:STUDENTS", rows=100, cols=20)
         return True
     except Exception as e:
         st.error(f"An error occurred while creating the class: {e}")
         return False
 
-# Function to register a new user
 def register_user(username, password, account_type):
     users = sheet.get_all_records()
     for user in users:
@@ -32,7 +27,6 @@ def register_user(username, password, account_type):
     sheet.append_row([username, password, account_type])
     return "Registration successful!"
 
-# Function to login a user
 def login_user(username, password):
     users = sheet.get_all_records()
     for user in users:
@@ -41,7 +35,6 @@ def login_user(username, password):
             return account_type, username
     return None, None
 
-# Function to join a class
 def join_class(username, class_name):
     try:
         class_sheet = spreadsheet.worksheet(f"{class_name}:STUDENTS")
@@ -54,24 +47,20 @@ def join_class(username, class_name):
     except gspread.exceptions.WorksheetNotFound:
         return f"Class '{class_name}' does not exist."
 
-# Function to get a list of all class names
 def get_class_names():
     worksheets = spreadsheet.worksheets()
     class_names = [ws.title.split(':')[0] for ws in worksheets if ':' in ws.title and "USERS" not in ws.title]
     return list(set(class_names))
 
-# Function to display class schedule and students
 def display_class(class_name):
     st.subheader(f"Class: {class_name}")
     
-    # Display schedule
     st.write("Schedule")
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
         schedule_data = schedule_sheet.get_all_values()
         df = pd.DataFrame(schedule_data[1:], columns=schedule_data[0])
         
-        # Editable table (only for teachers)
         if st.session_state.account_type.lower() == "teacher":
             gb = GridOptionsBuilder.from_dataframe(df)
             gb.configure_default_column(editable=True)
@@ -84,12 +73,11 @@ def display_class(class_name):
                 schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
                 st.success("Schedule updated successfully!")
         else:
-            st.table(df)  # Display as table for students
+            st.table(df)
         
     except gspread.exceptions.WorksheetNotFound:
         st.write("Schedule sheet not found.")
     
-    # Display students
     st.write("Students")
     try:
         students_sheet = spreadsheet.worksheet(f"{class_name}:STUDENTS")
@@ -98,13 +86,11 @@ def display_class(class_name):
     except gspread.exceptions.WorksheetNotFound:
         st.write("Students sheet not found.")
 
-# Initialize session state for login
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.account_type = ""
     st.session_state.username = ""
 
-# Streamlit application
 st.sidebar.title("Navigation")
 if st.session_state.logged_in:
     page = st.sidebar.selectbox("Choose a page", ["Home", "Logout"])
@@ -154,7 +140,6 @@ elif page == "Home" and st.session_state.logged_in:
         else:
             st.error("Failed to create the class.")
     
-    # Display dropdown menu to select a class
     class_names = get_class_names()
     selected_class = st.selectbox("Select a Class to Manage:", class_names)
     if selected_class:
@@ -167,4 +152,4 @@ elif page == "Logout" and st.session_state.logged_in:
         st.session_state.account_type = ""
         st.session_state.username = ""
         st.success("You have successfully logged out.")
-        st.rerun()  # Reload the page to reflect changes
+        st.rerun()
