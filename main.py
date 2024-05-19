@@ -69,10 +69,16 @@ def display_class(class_name):
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
         schedule_data = schedule_sheet.get_all_values()
-        df = pd.DataFrame(schedule_data[1:11], columns=schedule_data[0:2])  # Limit to first 2 columns and 10 rows
+        df = pd.DataFrame(schedule_data[:10], columns=schedule_data[0])
         
-        # Display editable table
-        AgGrid(df, editable=True)
+        # Editable table
+        gb = GridOptionsBuilder.from_dataframe(df)
+        gb.configure_column(“col1”, editable=True)
+        gb.configure_column(“col2”, editable=True)
+        grid_options = gb.build()
+
+        grid_return = AgGrid(df,
+        gridOptions=gridOptions)
         
         if st.button("Save Schedule"):
             schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
