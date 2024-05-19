@@ -81,4 +81,4 @@ elif page == "Logout" and st.session_state.logged_in:
         st.session_state.account_type = ""
         st.session_state.username = ""
         st.success("You have successfully logged out.")
-        st.experimental_rerun()  # Reload the page to reflect changes
+        st.rerun()  # Reload the page to reflect changes
