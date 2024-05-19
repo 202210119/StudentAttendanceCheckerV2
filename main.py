@@ -1,7 +1,6 @@
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from streamlit.errors import StreamlitAPIException  # Import StreamlitAPIException
 
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -12,7 +11,7 @@ sheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k").sheet
 def register_user(username, password, account_type):
     users = sheet.get_all_records()
     for user in users:
-        if user['Username'] == username:
+        if 'Username' in user and user['Username'] == username:
             return "Username already exists!"
     sheet.append_row([username, password, account_type])
     return "Registration successful!"
@@ -25,29 +24,34 @@ def login_user(username, password):
                 return user.get('AccountType')  # Use .get() to safely retrieve value
     return None
 
-
 # Streamlit application
-st.title("Registration and Login Page")
+st.sidebar.title("Navigation")
+page = st.sidebar.selectbox("Choose a page", ["Login", "Register"])
 
-# User Registration
-st.header("Register")
-register_username = st.text_input("Username", key="register_username")
-register_password = st.text_input("Password", type="password", key="register_password")
-account_type = st.radio("Account Type", ("Teacher", "Student"))
-if st.button("Register"):
-    try:
-        message = register_user(register_username, register_password, account_type)
-        st.success(message) if message == "Registration successful!" else st.error(message)
-    except StreamlitAPIException:  # Catch StreamlitAPIException
-        pass  # Do nothing if StreamlitAPIException occurs
+if page == "Register":
+    st.title("Registration Page")
+    st.header("Register")
+    register_username = st.text_input("Username", key="register_username")
+    register_password = st.text_input("Password", type="password", key="register_password")
+    account_type = st.radio("Account Type", ("Teacher", "Student"))
+    if st.button("Register"):
+        try:
+            message = register_user(register_username, register_password, account_type)
+            st.success(message) if message == "Registration successful!" else st.error(message)
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
 
-# User Login
-st.header("Login")
-login_username = st.text_input("Username", key="login_username")
-login_password = st.text_input("Password", type="password", key="login_password")
-if st.button("Login"):
-    account_type = login_user(login_username, login_password)
-    if account_type:
-        st.success(f"Logged in as {account_type}")
-    else:
-        st.error("Invalid username or password")
+elif page == "Login":
+    st.title("Login Page")
+    st.header("Login")
+    login_username = st.text_input("Username", key="login_username")
+    login_password = st.text_input("Password", type="password", key="login_password")
+    if st.button("Login"):
+        try:
+            account_type = login_user(login_username, login_password)
+            if account_type:
+                st.success(f"Logged in as {account_type}")
+            else:
+                st.error("Invalid username or password")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
