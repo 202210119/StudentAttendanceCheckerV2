@@ -6,25 +6,26 @@ from oauth2client.service_account import ServiceAccountCredentials
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
-spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
+sheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k").sheet1
 
-# Function to create a new class sheet
-def create_class(class_name):
-    try:
-        spreadsheet.add_worksheet(title=class_name, rows=100, cols=20)
-        return True
-    except Exception as e:
-        st.error(f"An error occurred while creating the class: {e}")
-        return False
+def register_user(username, password, account_type):
+    users = sheet.get_all_records()
+    for user in users:
+        if user.get('Username') == username:
+            return "Username already exists!"
+    sheet.append_row([username, password, account_type])
+    return "Registration successful!"
 
-# Function to check login credentials
 def login_user(username, password):
-    users = spreadsheet.worksheet("USERS").get_all_records()
+    users = sheet.get_all_records()
     for user in users:
         if user.get("Username") == username and str(user.get("Password")) == str(password):
             account_type = user.get("Account Type")
             return account_type, username
     return None, None
+
+
+
 
 # Initialize session state for login
 if 'logged_in' not in st.session_state:
@@ -73,19 +74,6 @@ elif page == "Login" and not st.session_state.logged_in:
 elif page == "Home" and st.session_state.logged_in:
     st.title("Home Page")
     st.header(f"Welcome, {st.session_state.account_type.lower()} {st.session_state.username}!")
-
-    if st.session_state.account_type.lower() == "teacher":
-        st.subheader("Create a Class")
-        class_name = st.text_input("Enter Class Name:")
-        if st.button("Create Class"):
-            if create_class(class_name):
-                st.success(f"Class '{class_name}' created successfully!")
-            else:
-                st.error("Failed to create the class.")
-    
-    # Display dropdown menu to select a class
-    classes = [worksheet.title for worksheet in spreadsheet.worksheets()]
-    selected_class = st.selectbox("Select a Class:", classes)
 
 elif page == "Logout" and st.session_state.logged_in:
     st.title("Logout Page")
