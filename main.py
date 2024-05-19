@@ -69,29 +69,21 @@ def display_class(class_name):
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
         schedule_data = schedule_sheet.get_all_values()
-        df = pd.DataFrame(schedule_data[:10], columns=schedule_data[0])
-        
+        df = pd.DataFrame(schedule_data[1:11], columns=schedule_data[0])  # Start from the 2nd row
+
         # Editable table
         gb = GridOptionsBuilder.from_dataframe(df)
         gb.configure_default_column(editable=True)
         grid_options = gb.build()
 
         grid_return = AgGrid(df, gridOptions=grid_options)
-        
+
         if st.button("Save Schedule"):
             # Get the updated dataframe from the AgGrid component
-            if 'data' in grid_return:
-                updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
-                # Remove empty rows
-                updated_df.dropna(how='all', inplace=True)
-                if not updated_df.empty:
-                    schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
-                    st.success("Schedule updated successfully!")
-                else:
-                    st.warning("No data to update.")
-            else:
-                st.warning("No data returned from the editable table.")
-        
+            updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
+            schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
+            st.success("Schedule updated successfully!")
+
     except gspread.exceptions.WorksheetNotFound:
         st.write("Schedule sheet not found.")
     
