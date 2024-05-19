@@ -11,18 +11,16 @@ sheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k").sheet
 def register_user(username, password, account_type):
     users = sheet.get_all_records()
     for user in users:
-        if user.get('thelolcommander') == username:
+        if user.get('Username') == username:
             return "Username already exists!"
     sheet.append_row([username, password, account_type])
     return "Registration successful!"
 
 def login_user(username, password):
     users = sheet.get_all_records()
-    st.write("Fetched users:", users)  # Debugging line
     for user in users:
-        st.write("Checking user:", user)  # Debugging line
-        if user.get('thelolcommander') == username and str(user.get('polp')) == password:
-            account_type = user.get('Teacher')
+        if user.get('Username') == username and str(user.get('Password')) == password:
+            account_type = user.get('AccountType')
             return account_type, username
     return None, None
 
