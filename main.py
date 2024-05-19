@@ -1,7 +1,6 @@
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import pandas as pd
 
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -9,18 +8,6 @@ creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", sco
 client = gspread.authorize(creds)
 spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
 sheet = spreadsheet.sheet1
-
-# Function to create a new class with schedule and students sheets
-def create_class(class_name):
-    try:
-        # Create schedule sheet
-        schedule_sheet = spreadsheet.add_worksheet(title=f"{class_name}:SCHEDULE", rows=100, cols=20)
-        # Create students sheet
-        students_sheet = spreadsheet.add_worksheet(title=f"{class_name}:STUDENTS", rows=100, cols=20)
-        return True
-    except Exception as e:
-        st.error(f"An error occurred while creating the class: {e}")
-        return False
 
 # Function to register a new user
 def register_user(username, password, account_type):
@@ -39,6 +26,19 @@ def login_user(username, password):
             account_type = user.get("Account Type")
             return account_type, username
     return None, None
+
+# Function to join a class
+def join_class(username, class_name):
+    try:
+        class_sheet = spreadsheet.worksheet(f"{class_name}:STUDENTS")
+        class_students = class_sheet.get_all_values()
+        for student in class_students:
+            if student[0] == username:
+                return "You are already enrolled in this class!"
+        class_sheet.append_row([username])
+        return f"{username} has been added to the class '{class_name}'!"
+    except gspread.exceptions.WorksheetNotFound:
+        return f"Class '{class_name}' does not exist."
 
 # Initialize session state for login
 if 'logged_in' not in st.session_state:
@@ -97,17 +97,12 @@ elif page == "Home" and st.session_state.logged_in:
             else:
                 st.error("Failed to create the class.")
     
-    # Display dropdown menu to select a class, excluding the "Users" sheet
-    classes = [worksheet.title for worksheet in spreadsheet.worksheets() if "Users" not in worksheet.title]
-    selected_class = st.selectbox("Select a Class:", classes)
-    
-    # Display editable table corresponding to the selected class's schedule
-    schedule_sheet = spreadsheet.worksheet(f"{selected_class}:SCHEDULE")
-    schedule_data = schedule_sheet.get_all_values()
-    df = pd.DataFrame(schedule_data[1:], columns=schedule_data[0])
-    st.write(df)  # Display DataFrame
-    if st.button("Save Changes"):
-        schedule_sheet.update([df.columns.values.tolist()] + df.values.tolist())
+    elif st.session_state.account_type.lower() == "student":
+        st.subheader("Join a Class")
+        class_name = st.text_input("Enter Class Name to Join:")
+        if st.button("Join Class"):
+            message = join_class(st.session_state.username, class_name)
+            st.success(message) if "added" in message else st.error(message)
 
 elif page == "Logout" and st.session_state.logged_in:
     st.title("Logout Page")
