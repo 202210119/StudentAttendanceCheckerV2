@@ -1,28 +1,38 @@
 import streamlit as st
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from streamlit_gsheets import GSheetsConnection
 
-# Google Sheets API setup
-scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
-         "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-client = gspread.authorize(creds)
-sheet = client.open("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k").sheet1
+# Create a connection object.
+conn = st.connection("gsheets", type=GSheetsConnection)
 
+# Function to register a new user to Google Sheets.
 def register_user(username, password, account_type):
-    users = sheet.get_all_records()
-    for user in users:
-        if user['Username'] == username:
-            return "Username already exists!"
-    sheet.append_row([username, password, account_type])
+    # Read data from the connected Google Sheets spreadsheet.
+    df = conn.read()
+
+    # Check if the username already exists.
+    if username in df['Username'].values:
+        return "Username already exists!"
+    
+    # Append new user information to the DataFrame.
+    new_row = {'Username': username, 'Password': password, 'AccountType': account_type}
+    df = df.append(new_row, ignore_index=True)
+    
+    # Write the updated DataFrame back to the Google Sheets spreadsheet.
+    conn.write(df)
+    
     return "Registration successful!"
 
+# Function to log in a user from Google Sheets.
 def login_user(username, password):
-    users = sheet.get_all_records()
-    for user in users:
-        if user['Username'] == username and user['Password'] == password:
-            return user['AccountType']
-    return None
+    # Read data from the connected Google Sheets spreadsheet.
+    df = conn.read()
+
+    # Check if the username and password match.
+    user_row = df[(df['Username'] == username) & (df['Password'] == password)]
+    if not user_row.empty:
+        return user_row.iloc[0]['AccountType']
+    else:
+        return None
 
 # Streamlit application
 st.title("Registration and Login Page")
