@@ -20,9 +20,11 @@ def register_user(username, password, account_type):
 def login_user(username, password):
     users = sheet.get_all_records()
     for user in users:
-        if user['Username'] == username and user['Password'] == password:
-            return user['AccountType']
+        if 'Username' in user and 'Password' in user:  # Check if keys are present
+            if user['Username'] == username and user['Password'] == password:
+                return user.get('AccountType')  # Use .get() to safely retrieve value
     return None
+
 
 # Streamlit application
 st.title("Registration and Login Page")
