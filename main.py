@@ -46,7 +46,6 @@ def join_class(username, class_name):
     try:
         class_sheet = spreadsheet.worksheet(f"{class_name}:STUDENTS")
         class_students = class_sheet.get_all_values()
-        print("Class Students:", class_students)  # Debugging print statement
         for student in class_students:
             if student[0] == username:
                 return "You are already enrolled in this class!"
@@ -70,21 +69,20 @@ def display_class(class_name):
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
         schedule_data = schedule_sheet.get_all_values()
-        df = pd.DataFrame(schedule_data[1:11], columns=schedule_data[0])  # Start from the 2nd row
-
+        df = pd.DataFrame(schedule_data[1:], columns=schedule_data[0])
+        
         # Editable table
         gb = GridOptionsBuilder.from_dataframe(df)
         gb.configure_default_column(editable=True)
         grid_options = gb.build()
 
         grid_return = AgGrid(df, gridOptions=grid_options)
-
+        
         if st.button("Save Schedule"):
-            # Get the updated dataframe from the AgGrid component
             updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
             schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
             st.success("Schedule updated successfully!")
-
+        
     except gspread.exceptions.WorksheetNotFound:
         st.write("Schedule sheet not found.")
     
@@ -130,39 +128,4 @@ elif page == "Login" and not st.session_state.logged_in:
     login_password = st.text_input("Password", type="password", key="login_password")
     if st.button("Login"):
         try:
-            account_type, username = login_user(login_username, login_password)
-            if account_type:
-                st.session_state.logged_in = True
-                st.session_state.account_type = account_type
-                st.session_state.username = username
-                st.success(f"Logged in as {account_type}")
-            else:
-                st.error("Invalid username or password")
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
-
-elif page == "Home" and st.session_state.logged_in:
-    st.title("Home Page")
-    st.header(f"Welcome, {st.session_state.account_type.lower()} {st.session_state.username}!")
-
-    if st.session_state.account_type.lower() == "teacher":
-        st.subheader("Create a Class")
-        class_name = st.text_input("Enter Class Name:")
-        if st.button("Create Class"):
-            if create_class(class_name):
-                st.success(f"Class '{class_name}' created successfully!")
-            else:
-                st.error("Failed to create the class.")
-        
-        # Display dropdown menu to select a class
-        class_names = get_class_names()
-        selected_class = st.selectbox("Select a Class to Manage:", class_names)
-        if selected_class:
-            display_class(selected_class)
-    
-    elif st.session_state.account_type.lower() == "student":
-        st.subheader("Join a Class")
-        class_name_to_join = st.text_input("Enter Class Name to Join:")
-        if st.button("Join Class"):
-            message = join_class(st.session_state.username, class_name_to_join)  # Fixing the function call
-            st.success(message) if "added" in message else st.error(message)
+            account_type, username
