@@ -17,14 +17,6 @@ def create_class(class_name):
         st.error(f"An error occurred while creating the class: {e}")
         return False
 
-# Function to get the list of classes
-def get_classes():
-    # Get all worksheet titles
-    all_worksheets = [worksheet.title for worksheet in spreadsheet.worksheets()]
-    # Filter out users as classes
-    classes = [worksheet for worksheet in all_worksheets if worksheet.lower() != "users"]
-    return classes
-
 # Initialize session state for login
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -83,7 +75,7 @@ elif page == "Home" and st.session_state.logged_in:
                 st.error("Failed to create the class.")
     
     # Display dropdown menu to select a class
-    classes = get_classes()
+    classes = [worksheet.title for worksheet in spreadsheet.worksheets()]
     selected_class = st.selectbox("Select a Class:", classes)
 
 elif page == "Logout" and st.session_state.logged_in:
