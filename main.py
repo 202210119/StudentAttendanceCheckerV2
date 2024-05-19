@@ -1,32 +1,32 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-conn = st.connection("gsheets", type=GSheetsConnection, id="15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
+# Google Sheets API setup
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+client = gspread.authorize(creds)
+sheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k").sheet1
 
 def register_user(username, password, account_type):
-    df = conn.read()
-
-    if username in df['Username'].values:
-        return "Username already exists!"
-    
-    new_row = {'Username': username, 'Password': password, 'AccountType': account_type}
-    df = df.append(new_row, ignore_index=True)
-    
-    conn.write(df)
-    
+    users = sheet.get_all_records()
+    for user in users:
+        if user['Username'] == username:
+            return "Username already exists!"
+    sheet.append_row([username, password, account_type])
     return "Registration successful!"
 
 def login_user(username, password):
-    df = conn.read()
+    users = sheet.get_all_records()
+    for user in users:
+        if user['Username'] == username and user['Password'] == password:
+            return user['AccountType']
+    return None
 
-    user_row = df[(df['Username'] == username) & (df['Password'] == password)]
-    if not user_row.empty:
-        return user_row.iloc[0]['AccountType']
-    else:
-        return None
-
+# Streamlit application
 st.title("Registration and Login Page")
 
+# User Registration
 st.header("Register")
 register_username = st.text_input("Username", key="register_username")
 register_password = st.text_input("Password", type="password", key="register_password")
@@ -35,6 +35,7 @@ if st.button("Register"):
     message = register_user(register_username, register_password, account_type)
     st.success(message) if message == "Registration successful!" else st.error(message)
 
+# User Login
 st.header("Login")
 login_username = st.text_input("Username", key="login_username")
 login_password = st.text_input("Password", type="password", key="login_password")
