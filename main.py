@@ -69,7 +69,7 @@ def display_class(class_name):
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
         schedule_data = schedule_sheet.get_all_values()
-        df = pd.DataFrame(schedule_data[:10], columns=schedule_data[0])
+        df = pd.DataFrame(schedule_data[:10], columns=schedule_data[2])
 
         # Editable table
         gb = GridOptionsBuilder.from_dataframe(df)
