@@ -96,8 +96,8 @@ elif page == "Home" and st.session_state.logged_in:
             else:
                 st.error("Failed to create the class.")
     
-    # Display dropdown menu to select a class
-    classes = [worksheet.title for worksheet in spreadsheet.worksheets()]
+    # Display dropdown menu to select a class, excluding the "Users" sheet
+    classes = [worksheet.title for worksheet in spreadsheet.worksheets() if "Users" not in worksheet.title]
     selected_class = st.selectbox("Select a Class:", classes)
 
 elif page == "Logout" and st.session_state.logged_in:
