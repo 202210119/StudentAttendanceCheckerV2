@@ -22,7 +22,12 @@ def login_user(username, password):
     for user in users:
         st.write(user)  # Debugging: Print each user
         if username in user and user[username] == password:
-            return user.get(account_type), username  # Use .get() to safely retrieve value
+            account_type = None
+            for key, value in user.items():
+                if value == 'Teacher' or value == 'Student':
+                    account_type = value
+                    break
+            return account_type, username
     return None, None
 
 # Initialize session state for login
