@@ -115,7 +115,7 @@ if page == "Register" and not st.session_state.logged_in:
     st.title("Registration Page")
     st.header("Register")
     register_username = st.text_input("Username", key="register_username")
-        register_password = st.text_input("Password", type="password", key="register_password")
+    register_password = st.text_input("Password", type="password", key="register_password")
     account_type = st.radio("Account Type", ("Teacher", "Student"))
     if st.button("Register"):
         try:
