@@ -73,7 +73,7 @@ def display_class(class_name):
         
         # Editable table
         gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_columns([df.columns[0], df.columns[1]], editable=True)
+        gb.configure_columns(df.columns.tolist()[:2], editable=True)
         grid_options = gb.build()
         grid_response = AgGrid(df, gridOptions=grid_options, columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS)
         updated_df = grid_response['data']
