@@ -29,7 +29,7 @@ def get_classes():
     return classes
 
 def login_user(username, password):
-    users = sheet.get_all_records()
+    users = spreadsheet.get_all_records()
     for user in users:
         if user.get("Username") == username and str(user.get("Password")) == str(password):
             account_type = user.get("Account Type")
