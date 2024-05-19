@@ -71,17 +71,20 @@ def display_class(class_name):
         schedule_data = schedule_sheet.get_all_values()
         df = pd.DataFrame(schedule_data[1:], columns=schedule_data[0])
         
-        # Editable table
-        gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_default_column(editable=True)
-        grid_options = gb.build()
+        # Editable table (only for teachers)
+        if st.session_state.account_type.lower() == "teacher":
+            gb = GridOptionsBuilder.from_dataframe(df)
+            gb.configure_default_column(editable=True)
+            grid_options = gb.build()
 
-        grid_return = AgGrid(df, gridOptions=grid_options)
-        
-        if st.button("Save Schedule"):
-            updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
-            schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
-            st.success("Schedule updated successfully!")
+            grid_return = AgGrid(df, gridOptions=grid_options)
+            
+            if st.button("Save Schedule"):
+                updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
+                schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
+                st.success("Schedule updated successfully!")
+        else:
+            st.table(df)  # Display as table for students
         
     except gspread.exceptions.WorksheetNotFound:
         st.write("Schedule sheet not found.")
@@ -112,7 +115,7 @@ if page == "Register" and not st.session_state.logged_in:
     st.title("Registration Page")
     st.header("Register")
     register_username = st.text_input("Username", key="register_username")
-    register_password = st.text_input("Password", type="password", key="register_password")
+        register_password = st.text_input("Password", type="password", key="register_password")
     account_type = st.radio("Account Type", ("Teacher", "Student"))
     if st.button("Register"):
         try:
