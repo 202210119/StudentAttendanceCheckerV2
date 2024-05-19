@@ -1,13 +1,12 @@
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import pandas as pd
 
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
-spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
-sheet = spreadsheet.sheet1
 
 # Function to create a new class with schedule and students sheets
 def create_class(class_name):
@@ -99,6 +98,12 @@ elif page == "Home" and st.session_state.logged_in:
     # Display dropdown menu to select a class, excluding the "Users" sheet
     classes = [worksheet.title for worksheet in spreadsheet.worksheets() if "Users" not in worksheet.title]
     selected_class = st.selectbox("Select a Class:", classes)
+    
+    # Display editable table corresponding to the selected class's schedule
+    schedule_sheet = spreadsheet.worksheet(f"{selected_class}:SCHEDULE")
+    schedule_data = schedule_sheet.get_all_values()
+    df = pd.DataFrame(schedule_data[1:], columns=schedule_data[0])
+    st.table(df)
 
 elif page == "Logout" and st.session_state.logged_in:
     st.title("Logout Page")
