@@ -1,8 +1,11 @@
+Sure, here's the full code with the modifications to handle editing the schedule table:
+
+```python
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
-from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -69,6 +72,10 @@ def display_class(class_name):
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
         schedule_data = schedule_sheet.get_all_values()
+        if not schedule_data:
+            st.write("No schedule data found.")
+            return
+
         df = pd.DataFrame(schedule_data[:10], columns=schedule_data[0])
 
         # Editable table
@@ -80,12 +87,16 @@ def display_class(class_name):
 
         if st.button("Save Schedule"):
             # Get the updated dataframe from the AgGrid component
-            updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
-            schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
-            st.success("Schedule updated successfully!")
-
+            if 'data' in grid_return:
+                updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
+                schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
+                st.success("Schedule updated successfully!")
+            else:
+                st.warning("No data returned from the editable table.")
     except gspread.exceptions.WorksheetNotFound:
         st.write("Schedule sheet not found.")
+    except Exception as e:
+        st.error(f"Error displaying schedule: {e}")
     
     # Display students
     st.write("Students")
@@ -164,11 +175,3 @@ elif page == "Home" and st.session_state.logged_in:
         class_name = st.text_input("Enter Class Name to Join:")
         if st.button("Join Class"):
             message = join_class(st.session_state.username, class_name)
-            st.success(message) if "added" in message else st.error(message)
-
-elif page == "Logout" and st.session_state.logged_in:
-    st.title("Logout Page")
-    if st.button("Logout"):
-        st.session_state.logged_in = False
-        st.session_state.account_type = ""
-        st.session
