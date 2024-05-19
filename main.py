@@ -1,6 +1,3 @@
-Sure, here's the full code with the modifications to handle editing the schedule table:
-
-```python
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
