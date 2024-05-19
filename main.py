@@ -1,90 +1,96 @@
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime, timedelta
+import pandas as pd
+from st_aggrid import AgGrid, GridOptionsBuilder
 
-# Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
 spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
+sheet = spreadsheet.sheet1
 
-# Function to create a new class sheet
 def create_class(class_name):
     try:
-        spreadsheet.add_worksheet(title=class_name, rows=100, cols=20)
+        schedule_sheet = spreadsheet.add_worksheet(title=f"{class_name}:SCHEDULE", rows=100, cols=20)
+        students_sheet = spreadsheet.add_worksheet(title=f"{class_name}:STUDENTS", rows=100, cols=20)
         return True
     except Exception as e:
         st.error(f"An error occurred while creating the class: {e}")
         return False
 
-# Function to get the list of classes
-def get_classes():
-    # Get all worksheet titles
-    all_worksheets = [worksheet.title for worksheet in spreadsheet.worksheets()]
-    # Filter out users as classes
-    classes = [worksheet for worksheet in all_worksheets if worksheet.lower() != "users"]
-    return classes
+def register_user(username, password, account_type):
+    users = sheet.get_all_records()
+    for user in users:
+        if user.get('Username') == username:
+            return "Username already exists!"
+    sheet.append_row([username, password, account_type])
+    return "Registration successful!"
 
-# Function to log attendance
-def log_attendance(username, class_name):
+def login_user(username, password):
+    users = sheet.get_all_records()
+    for user in users:
+        if user.get("Username") == username and str(user.get("Password")) == str(password):
+            account_type = user.get("Account Type")
+            return account_type, username
+    return None, None
+
+def join_class(username, class_name):
+    try:
+        class_sheet = spreadsheet.worksheet(f"{class_name}:STUDENTS")
+        class_students = class_sheet.get_all_values()
+        for student in class_students:
+            if student[0] == username:
+                return "You are already enrolled in this class!"
+        class_sheet.append_row([username])
+        return f"{username} has been added to the class '{class_name}'!"
+    except gspread.exceptions.WorksheetNotFound:
+        return f"Class '{class_name}' does not exist."
+
+def get_class_names():
+    worksheets = spreadsheet.worksheets()
+    class_names = [ws.title.split(':')[0] for ws in worksheets if ':' in ws.title and "USERS" not in ws.title]
+    return list(set(class_names))
+
+def display_class(class_name):
+    st.subheader(f"Class: {class_name}")
+    
+    st.write("Schedule")
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
-        current_time = datetime.now().strftime("%I:%M %p")
-        schedule_data = schedule_sheet.get_all_records()
+        schedule_data = schedule_sheet.get_all_values()
+        df = pd.DataFrame(schedule_data[1:], columns=schedule_data[0])
+        
+        if st.session_state.account_type.lower() == "teacher":
+            gb = GridOptionsBuilder.from_dataframe(df)
+            gb.configure_default_column(editable=True)
+            grid_options = gb.build()
 
-        # Debugging: Print schedule data to check the structure
-        st.write(schedule_data)
+            grid_return = AgGrid(df, gridOptions=grid_options)
+            
+            if st.button("Save Schedule"):
+                updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
+                schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
+                st.success("Schedule updated successfully!")
+        else:
+            st.table(df)
+        
+    except gspread.exceptions.WorksheetNotFound:
+        st.write("Schedule sheet not found.")
+    
+    st.write("Students")
+    try:
+        students_sheet = spreadsheet.worksheet(f"{class_name}:STUDENTS")
+        students_data = students_sheet.get_all_values()
+        st.table(students_data)
+    except gspread.exceptions.WorksheetNotFound:
+        st.write("Students sheet not found.")
 
-        current_time_obj = datetime.strptime(current_time, "%I:%M %p")
-
-        for i, entry in enumerate(schedule_data):
-            schedule_time_str = entry.get('Time')
-            if not schedule_time_str:
-                continue
-
-            try:
-                schedule_time_obj = datetime.strptime(schedule_time_str, "%I:%M %p")
-            except ValueError:
-                continue
-
-            if i + 1 < len(schedule_data):
-                next_schedule_time_str = schedule_data[i + 1].get('Time')
-                if next_schedule_time_str:
-                    try:
-                        next_schedule_time_obj = datetime.strptime(next_schedule_time_str, "%I:%M %p")
-                    except ValueError:
-                        next_schedule_time_obj = schedule_time_obj + timedelta(hours=1)
-                else:
-                    next_schedule_time_obj = schedule_time_obj + timedelta(hours=1)
-            else:
-                next_schedule_time_obj = schedule_time_obj + timedelta(hours=1)
-
-            if schedule_time_obj <= current_time_obj < next_schedule_time_obj:
-                subject = entry.get('Subject', 'N/A')
-                date_str = datetime.now().strftime("%m/%d/%Y, %A")
-                attendance_sheet = schedule_sheet.col_values(1)
-                if date_str not in attendance_sheet:
-                    schedule_sheet.append_row([date_str])
-
-                row_index = attendance_sheet.index(date_str) + 1
-                column_index = len(schedule_sheet.row_values(row_index)) + 1
-                attendance_time = datetime.now().strftime("%I:%M %p")
-                attendance_record = f"{username} present in {subject} at {attendance_time}"
-                schedule_sheet.update_cell(row_index, column_index, attendance_record)
-                return f"Attendance logged for {username} in {subject} at {current_time}"
-
-        return f"No class scheduled at {current_time}"
-    except Exception as e:
-        return f"An error occurred while logging attendance: {e}"
-
-# Initialize session state for login
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.account_type = ""
     st.session_state.username = ""
 
-# Streamlit application
 st.sidebar.title("Navigation")
 if st.session_state.logged_in:
     page = st.sidebar.selectbox("Choose a page", ["Home", "Logout"])
@@ -126,23 +132,18 @@ elif page == "Home" and st.session_state.logged_in:
     st.title("Home Page")
     st.header(f"Welcome, {st.session_state.account_type.lower()} {st.session_state.username}!")
 
-    if st.session_state.account_type.lower() == "teacher":
-        st.subheader("Create a Class")
-        class_name = st.text_input("Enter Class Name:")
-        if st.button("Create Class"):
-            if create_class(class_name):
-                st.success(f"Class '{class_name}' created successfully!")
-            else:
-                st.error("Failed to create the class.")
+    st.subheader("Create a Class")
+    class_name = st.text_input("Enter Class Name:")
+    if st.button("Create Class"):
+        if create_class(class_name):
+            st.success(f"Class '{class_name}' created successfully!")
+        else:
+            st.error("Failed to create the class.")
     
-    # Display dropdown menu to select a class
-    classes = get_classes()
-    selected_class = st.selectbox("Select a Class:", classes)
-
-    if st.session_state.account_type.lower() == "student" and selected_class:
-        if st.button("Log Attendance"):
-            message = log_attendance(st.session_state.username, selected_class)
-            st.success(message) if "logged" in message else st.error(message)
+    class_names = get_class_names()
+    selected_class = st.selectbox("Select a Class to Manage:", class_names)
+    if selected_class:
+        display_class(selected_class)
 
 elif page == "Logout" and st.session_state.logged_in:
     st.title("Logout Page")
@@ -151,4 +152,4 @@ elif page == "Logout" and st.session_state.logged_in:
         st.session_state.account_type = ""
         st.session_state.username = ""
         st.success("You have successfully logged out.")
-        st.rerun()  # Reload the page to reflect changes
+        st.rerun()
