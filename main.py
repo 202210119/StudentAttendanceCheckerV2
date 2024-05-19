@@ -7,6 +7,8 @@ import pandas as pd
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
+spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
+sheet = spreadsheet.sheet1
 
 # Function to create a new class with schedule and students sheets
 def create_class(class_name):
@@ -103,7 +105,9 @@ elif page == "Home" and st.session_state.logged_in:
     schedule_sheet = spreadsheet.worksheet(f"{selected_class}:SCHEDULE")
     schedule_data = schedule_sheet.get_all_values()
     df = pd.DataFrame(schedule_data[1:], columns=schedule_data[0])
-    st.table(df)
+    st.write(df)  # Display DataFrame
+    if st.button("Save Changes"):
+        schedule_sheet.update([df.columns.values.tolist()] + df.values.tolist())
 
 elif page == "Logout" and st.session_state.logged_in:
     st.title("Logout Page")
