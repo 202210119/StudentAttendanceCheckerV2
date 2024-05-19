@@ -11,7 +11,7 @@ sheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k").sheet
 def register_user(username, password, account_type):
     users = sheet.get_all_records()
     for user in users:
-        if 'Username' in user and user['Username'] == username:
+        if username in user:
             return "Username already exists!"
     sheet.append_row([username, password, account_type])
     return "Registration successful!"
@@ -21,9 +21,8 @@ def login_user(username, password):
     st.write(users)  # Debugging: Print all users
     for user in users:
         st.write(user)  # Debugging: Print each user
-        if 'Username' in user and 'Password' in user:  # Check if keys are present
-            if user['Username'] == username and user['Password'] == password:
-                return user.get('AccountType'), user.get('Username')  # Use .get() to safely retrieve value
+        if username in user and user[username] == password:
+            return user.get(account_type), username  # Use .get() to safely retrieve value
     return None, None
 
 # Initialize session state for login
