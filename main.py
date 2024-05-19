@@ -1,4 +1,3 @@
-
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -70,21 +69,17 @@ def display_class(class_name):
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
         schedule_data = schedule_sheet.get_all_values()
-        if not schedule_data:
-            st.write("No schedule data found.")
-            return
-
         df = pd.DataFrame(schedule_data[:10], columns=schedule_data[0])
-
+        
         # Editable table
         gb = GridOptionsBuilder.from_dataframe(df)
         gb.configure_default_column(editable=True)
         grid_options = gb.build()
 
         grid_return = AgGrid(df, gridOptions=grid_options)
-
+        
         if st.button("Save Schedule"):
-    # Get the updated dataframe from the AgGrid component
+            # Get the updated dataframe from the AgGrid component
             if 'data' in grid_return:
                 updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
                 # Remove empty rows
@@ -96,7 +91,9 @@ def display_class(class_name):
                     st.warning("No data to update.")
             else:
                 st.warning("No data returned from the editable table.")
-
+        
+    except gspread.exceptions.WorksheetNotFound:
+        st.write("Schedule sheet not found.")
     
     # Display students
     st.write("Students")
@@ -174,4 +171,4 @@ elif page == "Home" and st.session_state.logged_in:
         st.subheader("Join a Class")
         class_name = st.text_input("Enter Class Name to Join:")
         if st.button("Join Class"):
-            message = join_class(st.session_state.username, class_name)
+            message = join
