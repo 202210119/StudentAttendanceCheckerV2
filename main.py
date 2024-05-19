@@ -60,7 +60,6 @@ def get_class_names():
     class_names = [ws.title.split(':')[0] for ws in worksheets if ':' in ws.title and "USERS" not in ws.title]
     return list(set(class_names))
 
-# Function to log attendance
 def log_attendance(username, class_name):
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
@@ -73,12 +72,25 @@ def log_attendance(username, class_name):
         current_time_obj = datetime.strptime(current_time, "%I:%M %p")
 
         for i, entry in enumerate(schedule_data):
-            schedule_time_obj = datetime.strptime(entry.get('Time'), "%I:%M %p")
+            schedule_time_str = entry.get('Time')
+            if not schedule_time_str:
+                continue
+
+            try:
+                schedule_time_obj = datetime.strptime(schedule_time_str, "%I:%M %p")
+            except ValueError:
+                continue
+
             next_schedule_time_obj = schedule_time_obj + timedelta(hours=1)
 
             if i + 1 < len(schedule_data):
                 next_entry = schedule_data[i + 1]
-                next_schedule_time_obj = datetime.strptime(next_entry.get('Time'), "%I:%M %p")
+                next_schedule_time_str = next_entry.get('Time')
+                if next_schedule_time_str:
+                    try:
+                        next_schedule_time_obj = datetime.strptime(next_schedule_time_str, "%I:%M %p")
+                    except ValueError:
+                        next_schedule_time_obj = schedule_time_obj + timedelta(hours=1)
 
             if schedule_time_obj <= current_time_obj < next_schedule_time_obj:
                 subject = entry.get('Subject', 'N/A')
