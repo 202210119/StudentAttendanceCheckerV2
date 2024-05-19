@@ -143,20 +143,25 @@ elif page == "Home" and st.session_state.logged_in:
     st.title("Home Page")
     st.header(f"Welcome, {st.session_state.account_type.lower()} {st.session_state.username}!")
 
-    if st.session_state.account_type.lower() == "teacher":
-        st.subheader("Teacher Section")
-        # Teacher-specific content
-        st.subheader("Create a Class")
-        class_name = st.text_input("Enter Class Name:")
-        if st.button("Create Class"):
-            if create_class(class_name):
-                st.success(f"Class '{class_name}' created successfully!")
-            else:
-                st.error("Failed to create the class.")
-        
-        # Display dropdown menu to select a class
-        class_names = get_class_names()
-        selected_class = st.selectbox("Select a Class to Manage:", class_names)
-        if selected_class:
-            display_class(selected_class)
-    elif st.session_state.account
+    st.subheader("Create a Class")
+    class_name = st.text_input("Enter Class Name:")
+    if st.button("Create Class"):
+        if create_class(class_name):
+            st.success(f"Class '{class_name}' created successfully!")
+        else:
+            st.error("Failed to create the class.")
+    
+    # Display dropdown menu to select a class
+    class_names = get_class_names()
+    selected_class = st.selectbox("Select a Class to Manage:", class_names)
+    if selected_class:
+        display_class(selected_class)
+
+elif page == "Logout" and st.session_state.logged_in:
+    st.title("Logout Page")
+    if st.button("Logout"):
+        st.session_state.logged_in = False
+        st.session_state.account_type = ""
+        st.session_state.username = ""
+        st.success("You have successfully logged out.")
+        st.rerun()  # Reload the page to reflect changes
