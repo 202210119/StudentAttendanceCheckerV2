@@ -58,6 +58,7 @@ elif page == "Login" and not st.session_state.logged_in:
     if st.button("Login"):
         try:
             account_type, username = login_user(login_username, login_password)
+            st.write(f"Checking user: {username}")
             if account_type:
                 st.session_state.logged_in = True
                 st.session_state.account_type = account_type
@@ -67,6 +68,7 @@ elif page == "Login" and not st.session_state.logged_in:
                 st.error("Invalid username or password")
         except Exception as e:
             st.error(f"An error occurred: {e}")
+
 
 elif page == "Home" and st.session_state.logged_in:
     st.title("Home Page")
