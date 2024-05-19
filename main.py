@@ -70,29 +70,22 @@ def display_class(class_name):
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
         schedule_data = schedule_sheet.get_all_values()
         df = pd.DataFrame(schedule_data[:10], columns=schedule_data[0])
-        
-        # Display schedule
-        st.write("Schedule")
-        try:
-            schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
-            schedule_data = schedule_sheet.get_all_values()
-            df = pd.DataFrame(schedule_data[:10], columns=schedule_data[0])
 
-            # Editable table
-            gb = GridOptionsBuilder.from_dataframe(df)
-            gb.configure_default_column(editable=True)
-            grid_options = gb.build()
+        # Editable table
+        gb = GridOptionsBuilder.from_dataframe(df)
+        gb.configure_default_column(editable=True)
+        grid_options = gb.build()
 
-            grid_return = AgGrid(df, gridOptions=grid_options)
+        grid_return = AgGrid(df, gridOptions=grid_options)
 
-            if st.button("Save Schedule"):
-                # Get the updated dataframe from the AgGrid component
-                updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
-                schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
-                st.success("Schedule updated successfully!")
+        if st.button("Save Schedule"):
+            # Get the updated dataframe from the AgGrid component
+            updated_df = pd.DataFrame(grid_return['data'], columns=df.columns)
+            schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
+            st.success("Schedule updated successfully!")
 
-        except gspread.exceptions.WorksheetNotFound:
-            st.write("Schedule sheet not found.")
+    except gspread.exceptions.WorksheetNotFound:
+        st.write("Schedule sheet not found.")
     
     # Display students
     st.write("Students")
@@ -178,6 +171,4 @@ elif page == "Logout" and st.session_state.logged_in:
     if st.button("Logout"):
         st.session_state.logged_in = False
         st.session_state.account_type = ""
-        st.session_state.username = ""
-        st.success("You have successfully logged out.")
-        st.rerun()  # Reload the page to reflect changes
+        st.session
