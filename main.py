@@ -7,7 +7,7 @@ scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/au
          "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 client = gspread.authorize(creds)
-sheet = client.open("StudentAttendanceCheckerV2").sheet1  # Open the Google Sheet
+sheet = client.open("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k").sheet1  # Open the Google Sheet
 
 def register_user(username, password, account_type):
     users = sheet.get_all_records()
