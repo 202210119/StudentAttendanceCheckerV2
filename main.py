@@ -20,12 +20,10 @@ def login_user(username, password, users):
     for user_data in users:
         if len(user_data) < 3:  # Skip incomplete rows
             continue
-        stored_username, stored_password, account_type = user_data[:3]  # Extract username, password, account type
-        print(f"Comparing: username={username}, password={password}, stored_username={stored_username}, stored_password={stored_password}")
-        if stored_username == username and str(stored_password) == password:
-            print("Match found!")
-            return account_type, username
-    print("No match found.")
+        stored_username, stored_password, account_type = [value.strip() if isinstance(value, str) else value for value in user_data[:3]]  # Extract and strip username, password, account type
+        stored_username_lower = stored_username.lower()  # Convert stored username to lowercase
+        if stored_username_lower == username.strip().lower() and str(stored_password) == password.strip():
+            return account_type, stored_username
     return None, None
 
 # Initialize session state for login
