@@ -18,7 +18,6 @@ def register_user(username, password, account_type):
 
 def login_user(username, password):
     users = sheet.get_all_records()
-    st.write("Fetched users:", users)  # Debugging line
     for user in users:
         if user.get("Username") == username and str(user.get("Password")) == str(password):
             account_type = user.get("Account Type")
