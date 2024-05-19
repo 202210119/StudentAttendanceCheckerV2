@@ -8,10 +8,13 @@ creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", sco
 client = gspread.authorize(creds)
 spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
 
-# Function to create a new class sheet
+# Function to create a new class sheets
 def create_class(class_name):
     try:
-        spreadsheet.add_worksheet(title=class_name, rows=100, cols=20)
+        # Create schedule sheet
+        schedule_sheet = spreadsheet.add_worksheet(title=f"{class_name}:SCHEDULE", rows=100, cols=20)
+        # Create students sheet
+        students_sheet = spreadsheet.add_worksheet(title=f"{class_name}:STUDENTS", rows=100, cols=20)
         return True
     except Exception as e:
         st.error(f"An error occurred while creating the class: {e}")
@@ -22,7 +25,7 @@ def get_classes():
     # Get all worksheet titles
     all_worksheets = [worksheet.title for worksheet in spreadsheet.worksheets()]
     # Filter out users as classes
-    classes = [worksheet for worksheet in all_worksheets if worksheet.lower() != "users"]
+    classes = [worksheet for worksheet in all_worksheets if worksheet.lower().split(":")[-1] != "users"]
     return classes
 
 # Initialize session state for login
