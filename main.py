@@ -11,17 +11,19 @@ sheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k").sheet
 def register_user(username, password, account_type):
     users = sheet.get_all_records()
     for user in users:
-        if user.get(USERNAME_COLUMN) == username:
+        if user.get('Username') == username:
             return "Username already exists!"
     sheet.append_row([username, password, account_type])
     return "Registration successful!"
 
-def login_user(username, password, users):
-    for user_data in users:
-        stored_username, stored_password, account_type = [value.strip() if isinstance(value, str) else value for value in user_data[:3]]  # Extract and strip username, password, account type
-        stored_username_lower = stored_username.lower()  # Convert stored username to lowercase
-        if stored_username_lower == username.strip().lower() and str(stored_password) == password.strip():
-            return account_type, stored_username
+def login_user(username, password):
+    users = sheet.get_all_records()
+    st.write("Fetched users:", users)  # Debugging line
+    for user in users:
+        st.write("Checking user:", user)  # Debugging line
+        if user.get('Username') == username and user.get('Password') == password:
+            account_type = user.get('AccountType')
+            return account_type, username
     return None, None
 
 # Initialize session state for login
@@ -57,9 +59,7 @@ elif page == "Login" and not st.session_state.logged_in:
     login_password = st.text_input("Password", type="password", key="login_password")
     if st.button("Login"):
         try:
-            users = sheet.get_all_records()  # Fetch all records from Google Sheets
-            st.write(f"Fetched users: {users}")  # Debug statement
-            account_type, username = login_user(login_username, login_password, users)
+            account_type, username = login_user(login_username, login_password)
             if account_type:
                 st.session_state.logged_in = True
                 st.session_state.account_type = account_type
@@ -69,7 +69,7 @@ elif page == "Login" and not st.session_state.logged_in:
                 st.error("Invalid username or password")
         except Exception as e:
             st.error(f"An error occurred: {e}")
-            
+
 elif page == "Home" and st.session_state.logged_in:
     st.title("Home Page")
     st.header(f"Welcome, {st.session_state.account_type.lower()} {st.session_state.username}!")
@@ -81,4 +81,4 @@ elif page == "Logout" and st.session_state.logged_in:
         st.session_state.account_type = ""
         st.session_state.username = ""
         st.success("You have successfully logged out.")
-        st.rerun()  # Reload the page to reflect changes
+        st.experimental_rerun()  # Reload the page to reflect changes
