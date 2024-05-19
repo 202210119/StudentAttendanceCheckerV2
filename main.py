@@ -73,10 +73,11 @@ def display_class(class_name):
         
         # Editable table
         gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_columns(df.columns.tolist()[:2], editable=True)
+        gb.configure_columns(df.columns.tolist()[:2], editable=True)  # Limit to the first 2 columns
         grid_options = gb.build()
         grid_response = AgGrid(df, gridOptions=grid_options, columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS)
         updated_df = grid_response['data']
+
         
         if st.button("Save Schedule"):
             schedule_sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
