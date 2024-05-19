@@ -1,7 +1,6 @@
-# Define column names
-USERNAME_COLUMN = 'Username'
-PASSWORD_COLUMN = 'Password'
-ACCOUNT_TYPE_COLUMN = 'AccountType'
+import streamlit as st
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -59,6 +58,7 @@ elif page == "Login" and not st.session_state.logged_in:
     if st.button("Login"):
         try:
             users = sheet.get_all_records()  # Fetch all records from Google Sheets
+            st.write(f"Fetched users: {users}")  # Debug statement
             account_type, username = login_user(login_username, login_password, users)
             if account_type:
                 st.session_state.logged_in = True
@@ -69,7 +69,7 @@ elif page == "Login" and not st.session_state.logged_in:
                 st.error("Invalid username or password")
         except Exception as e:
             st.error(f"An error occurred: {e}")
-
+            
 elif page == "Home" and st.session_state.logged_in:
     st.title("Home Page")
     st.header(f"Welcome, {st.session_state.account_type.lower()} {st.session_state.username}!")
