@@ -2,7 +2,7 @@ import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Google Sheets API setup
@@ -70,8 +70,17 @@ def log_attendance(username, class_name):
         # Debugging: Print schedule data to check the structure
         st.write(schedule_data)
 
-        for entry in schedule_data:
-            if entry.get('Time') == current_time:
+        current_time_obj = datetime.strptime(current_time, "%I:%M %p")
+
+        for i, entry in enumerate(schedule_data):
+            schedule_time_obj = datetime.strptime(entry.get('Time'), "%I:%M %p")
+            next_schedule_time_obj = schedule_time_obj + timedelta(hours=1)
+
+            if i + 1 < len(schedule_data):
+                next_entry = schedule_data[i + 1]
+                next_schedule_time_obj = datetime.strptime(next_entry.get('Time'), "%I:%M %p")
+
+            if schedule_time_obj <= current_time_obj < next_schedule_time_obj:
                 subject = entry.get('Subject', 'N/A')
                 date_str = datetime.now().strftime("%m/%d/%Y, %A")
                 attendance_sheet = schedule_sheet.col_values(1)
@@ -84,6 +93,7 @@ def log_attendance(username, class_name):
                 attendance_record = f"{username} present in {subject} at {attendance_time}"
                 schedule_sheet.update_cell(row_index, column_index, attendance_record)
                 return f"Attendance logged for {username} in {subject} at {current_time}"
+
         return f"No class scheduled at {current_time}"
     except Exception as e:
         return f"An error occurred while logging attendance: {e}"
