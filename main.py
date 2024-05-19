@@ -161,6 +161,7 @@ elif page == "Home" and st.session_state.logged_in:
     
     elif st.session_state.account_type.lower() == "student":
         st.subheader("Join a Class")
-        class_name = st.text_input("Enter Class Name to Join:")
+        class_name_to_join = st.text_input("Enter Class Name to Join:")
         if st.button("Join Class"):
-            message = join
+            message = join_class(st.session_state.username, class_name_to_join)  # Fixing the function call
+            st.success(message) if "added" in message else st.error(message)
