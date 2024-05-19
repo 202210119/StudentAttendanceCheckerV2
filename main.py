@@ -69,11 +69,11 @@ def display_class(class_name):
     try:
         schedule_sheet = spreadsheet.worksheet(f"{class_name}:SCHEDULE")
         schedule_data = schedule_sheet.get_all_values()
-        df = pd.DataFrame(schedule_data[1:], columns=schedule_data[0])
+        df = pd.DataFrame(schedule_data[1:11], columns=schedule_data[0:2])  # Limit to first 2 columns and 10 rows
         
         # Editable table
         gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_default_column(editable=True)
+        gb.configure_columns([df.columns[0], df.columns[1]], editable=True)
         grid_options = gb.build()
         grid_response = AgGrid(df, gridOptions=grid_options, columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS)
         updated_df = grid_response['data']
