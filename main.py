@@ -8,34 +8,14 @@ creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", sco
 client = gspread.authorize(creds)
 spreadsheet = client.open_by_key("15VPgLMbxjrtAKhI4TdSEGuRWLexm8zE1XXkGUmdv55k")
 
-# Function to create a new class sheets
+# Function to create a new class sheet
 def create_class(class_name):
     try:
-        # Create schedule sheet
-        schedule_sheet = spreadsheet.add_worksheet(title=f"{class_name}:SCHEDULE", rows=100, cols=20)
-        # Create students sheet
-        students_sheet = spreadsheet.add_worksheet(title=f"{class_name}:STUDENTS", rows=100, cols=20)
+        spreadsheet.add_worksheet(title=class_name, rows=100, cols=20)
         return True
     except Exception as e:
         st.error(f"An error occurred while creating the class: {e}")
         return False
-
-# Function to get the list of classes
-def get_classes():
-    # Get all worksheet titles
-    all_worksheets = [worksheet.title for worksheet in spreadsheet.worksheets()]
-    # Filter out users as classes
-    classes = [worksheet for worksheet in all_worksheets if worksheet.lower().split(":")[-1] != "users"]
-    return classes
-
-# Function to check login credentials
-def login_user(username, password):
-    users = spreadsheet.worksheet("USERS").get_all_records()
-    for user in users:
-        if user.get("Username") == username and str(user.get("Password")) == str(password):
-            account_type = user.get("Account Type")
-            return account_type, username
-    return None, None
 
 # Initialize session state for login
 if 'logged_in' not in st.session_state:
@@ -95,7 +75,7 @@ elif page == "Home" and st.session_state.logged_in:
                 st.error("Failed to create the class.")
     
     # Display dropdown menu to select a class
-    classes = get_classes()
+    classes = [worksheet.title for worksheet in spreadsheet.worksheets()]
     selected_class = st.selectbox("Select a Class:", classes)
 
 elif page == "Logout" and st.session_state.logged_in:
@@ -104,3 +84,5 @@ elif page == "Logout" and st.session_state.logged_in:
         st.session_state.logged_in = False
         st.session_state.account_type = ""
         st.session_state.username = ""
+        st.success("You have successfully logged out.")
+        st.rerun()  # Reload the page to reflect changes
