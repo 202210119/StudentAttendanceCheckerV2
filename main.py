@@ -20,10 +20,11 @@ def login_user(username, password):
     users = sheet.get_all_records()
     st.write("Fetched users:", users)  # Debugging line
     for user in users:
-        if user.get("Username") == username and user.get("Password") == password:
-            account_type = user.get("AccountType")
+        if user.get("username") == username and str(user.get("password")) == str(password):
+            account_type = user.get("Account Type")
             return account_type, username
     return None, None
+
 
 # Initialize session state for login
 if 'logged_in' not in st.session_state:
