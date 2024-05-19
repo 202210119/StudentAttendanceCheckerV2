@@ -21,7 +21,7 @@ def login_user(username, password, users):
         if len(user_data) < 3:  # Skip incomplete rows
             continue
         stored_username, stored_password, account_type = user_data[:3]  # Extract username, password, account type
-        if stored_username == username and stored_password == password:
+        if stored_username == username and str(stored_password) == password:
             return account_type, username
     return None, None
 
